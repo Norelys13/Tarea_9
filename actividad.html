@@ -1,11 +1,257 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biblioteca</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    .icon-btn { background: none; border: 0; cursor: pointer; padding: .25rem; }
+    .icon-btn svg { width: 20px; height: 20px; }
+    .icon-btn.edit { color: #3e8ed0; }
+    .icon-btn.del { color: #f14668; }
+    .navbar-brand .title { color: #00947e; }
+  </style>
 </head>
 <body>
-    
+
+  <nav class="navbar is-white has-shadow" role="navigation" aria-label="principal">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="#"><strong class="title is-5">Biblioteca</strong></a>
+      </div>
+      <div class="navbar-menu is-active">
+        <div class="navbar-start">
+          <a class="navbar-item is-active" href="#"><i class="fas fa-book mr-2"></i>Libros</a>
+          <a class="navbar-item" href="#"><i class="fas fa-user-pen mr-2"></i>Autores</a>
+          <a class="navbar-item" href="#"><i class="fas fa-handshake mr-2"></i>Préstamos</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <div class="level">
+        <div class="level-left">
+          <h1 class="title">Registro de libros</h1>
+        </div>
+        <div class="level-right">
+          <button class="button is-primary" id="btnAgregar" onclick="abrirModalAgregar()"><span class="icon"><i class="fas fa-plus"></i></span><span>Agregar libro</span></button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th>#</th><th>Título</th><th>Autor</th><th>Género</th><th>Año</th><th>Páginas</th><th>Operaciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <nav class="pagination is-centered" role="navigation" aria-label="paginación">
+        <a class="pagination-previous" id="prev" onclick="paginaAnterior()">Anterior</a>
+        <a class="pagination-next" id="next" onclick="paginaSiguiente()">Siguiente</a>
+        <ul class="pagination-list" id="pages"></ul>
+      </nav>
+    </div>
+  </section>
+
+  <div class="modal" id="modal">
+    <div class="modal-background" onclick="cerrarModal()"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title" id="modalTitulo">Agregar libro</p>
+        <button class="delete" aria-label="cerrar" onclick="cerrarModal()"></button>
+      </header>
+      <form id="form" onsubmit="guardarLibro(event)">
+        <section class="modal-card-body">
+          <input type="hidden" id="id">
+          <div class="field">
+            <label class="label" for="titulo">Título</label>
+            <div class="control"><input class="input" id="titulo" type="text" placeholder="Ej. Cien años de soledad" required></div>
+          </div>
+          <div class="field">
+            <label class="label" for="genero">Género</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select id="genero" required>
+                  <option>Novela</option><option>Cuento</option><option>Ciencia</option><option>Historia</option><option>Poesía</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column field">
+              <label class="label" for="anio">Año</label>
+              <div class="control"><input class="input" id="anio" type="number" min="0" max="2026" required></div>
+            </div>
+            <div class="column field">
+              <label class="label" for="paginas">Páginas</label>
+              <div class="control"><input class="input" id="paginas" type="number" min="1" required></div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="autor">Autor</label>
+            <div class="control"><input class="input" id="autor" type="text" placeholder="Nombre del autor" required></div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-primary" type="submit"><span class="icon"><i class="fas fa-floppy-disk"></i></span><span>Guardar</span></button>
+          <button class="button" type="button" onclick="cerrarModal()">Cancelar</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+<script>
+  let libros = [
+    { id: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", genero: "Novela", anio: 1967, paginas: 471},
+    { id: 2, titulo: "La ciudad y los perros", autor: "Mario Vargas Llosa", genero: "Novela", anio: 1963, paginas: 416},
+    { id: 3, titulo: "Los ríos profundos", autor: "José María Arguedas", genero: "Novela", anio: 1958, paginas: 248 },
+    { id: 4, titulo: "Tradiciones peruanas", autor: "Ricardo Palma", genero: "Cuento", anio: 1872, paginas: 380 },
+    { id: 5, titulo: "Breve historia del tiempo", autor: "Stephen Hawking", genero: "Ciencia", anio: 1988, paginas: 212 },
+    { id: 6, titulo: "Sapiens", autor: "Yuval Noah Harari", genero: "Historia", anio: 2011, paginas: 498},
+    { id: 7, titulo: "El principito", autor: "Antoine de Saint-Exupéry", genero: "Novela", anio: 1943, paginas: 96 },
+    { id: 8, titulo: "Trilce", autor: "César Vallejo", genero: "Poesía", anio: 1922, paginas: 120 },
+    { id: 9, titulo: "Ficciones", autor: "Jorge Luis Borges", genero: "Cuento", anio: 1944, paginas: 224 },
+    { id: 10, titulo: "Cosmos", autor: "Carl Sagan", genero: "Ciencia", anio: 1980, paginas: 396 },
+    { id: 11, titulo: "Conversación en La Catedral", autor: "Mario Vargas Llosa", genero: "Novela", anio: 1969, paginas: 601 },
+    { id: 12, titulo: "Los heraldos negros", autor: "César Vallejo", genero: "Poesía", anio: 1919, paginas: 100 }
+  ];
+
+  let siguienteId = 13;
+  let paginaActual = 1;
+  const librosPorPagina = 5;
+
+  function cantidadPaginas() {
+    return Math.max(1, Math.ceil(libros.length / librosPorPagina));
+  }
+
+  function irAPagina(numero) {
+    paginaActual = numero;
+    mostrarTabla();
+  }
+
+  function paginaAnterior() {
+    if (paginaActual > 1) irAPagina(paginaActual - 1);
+  }
+
+  function paginaSiguiente() {
+    if (paginaActual < cantidadPaginas()) irAPagina(paginaActual + 1);
+  }
+
+  function mostrarPaginacion() {
+    let botones = "";
+    for (let p = 1; p <= cantidadPaginas(); p++) {
+      const clase = p === paginaActual ? "pagination-link is-current" : "pagination-link";
+      botones += `<li><a class="${clase}" onclick="irAPagina(${p})">${p}</a></li>`;
+    }
+    document.getElementById("pages").innerHTML = botones;
+  }
+
+  function mostrarTabla() {
+    if (paginaActual > cantidadPaginas()) paginaActual = cantidadPaginas();
+
+    const inicio = (paginaActual - 1) * librosPorPagina;
+    const librosDePagina = libros.slice(inicio, inicio + librosPorPagina);
+
+    let filas = "";
+    librosDePagina.forEach(function (libro) {
+      filas += `
+        <tr>
+          <td>${libro.id}</td>
+          <td>${libro.titulo}</td>
+          <td>${libro.autor}</td>
+          <td>${libro.genero}</td>
+          <td>${libro.anio}</td>
+          <td>${libro.paginas}</td>
+          <td>
+            <button class="icon-btn edit" title="Editar" onclick="abrirModalEditar(${libro.id})">
+              <i class="fas fa-pen-to-square"></i>
+            </button>
+            <button class="icon-btn del" title="Eliminar" onclick="eliminarLibro(${libro.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    if (libros.length === 0) {
+      filas = `<tr><td colspan="7" class="has-text-centered">No hay libros. Agrega el primero.</td></tr>`;
+    }
+
+    document.getElementById("tbody").innerHTML = filas;
+    mostrarPaginacion();
+  }
+
+  function abrirModalAgregar() {
+    document.getElementById("modalTitulo").textContent = "Agregar libro";
+    document.getElementById("form").reset();
+    document.getElementById("id").value = "";
+    document.getElementById("modal").classList.add("is-active");
+  }
+
+  function abrirModalEditar(id) {
+    const libro = libros.find(function (l) { return l.id === id; });
+
+    document.getElementById("modalTitulo").textContent = "Editar libro";
+    document.getElementById("id").value = libro.id;
+    document.getElementById("titulo").value = libro.titulo;
+    document.getElementById("autor").value = libro.autor;
+    document.getElementById("genero").value = libro.genero;
+    document.getElementById("anio").value = libro.anio;
+    document.getElementById("paginas").value = libro.paginas;
+    document.getElementById("modal").classList.add("is-active");
+  }
+
+  function cerrarModal() {
+    document.getElementById("modal").classList.remove("is-active");
+  }
+
+  function guardarLibro(evento) {
+    evento.preventDefault();
+
+    const id = document.getElementById("id").value;
+    const datos = {
+      titulo: document.getElementById("titulo").value,
+      autor: document.getElementById("autor").value,
+      genero: document.getElementById("genero").value,
+      anio: Number(document.getElementById("anio").value),
+      paginas: Number(document.getElementById("paginas").value)
+    };
+
+    if (id === "") {
+      datos.id = siguienteId;
+      siguienteId++;
+      libros.push(datos);
+      paginaActual = cantidadPaginas();
+    } else {
+
+      const libro = libros.find(function (l) { return l.id === Number(id); });
+      libro.titulo = datos.titulo;
+      libro.autor = datos.autor;
+      libro.genero = datos.genero;
+      libro.anio = datos.anio;
+      libro.paginas = datos.paginas;
+    }
+
+    cerrarModal();
+    mostrarTabla();
+  }
+
+  function eliminarLibro(id) {
+    if (confirm("¿Eliminar este libro?")) {
+      libros = libros.filter(function (l) { return l.id !== id; });
+      mostrarTabla();
+    }
+  }
+
+  mostrarTabla();
+</script>
 </body>
 </html>
